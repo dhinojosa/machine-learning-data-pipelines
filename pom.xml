@@ -3,12 +3,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.evolutionnext</groupId>
-  <artifactId>machinelearningdatapipelines</artifactId>
+  <artifactId>machine-learning-data-pipelines</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>machinelearningdatapipelines</name>
-  <url>http://maven.apache.org</url>
+  <name>machine-learning-data-pipelines</name>
+  <url>https://github.com/dhinojosa/machine-learning-data-pipelines</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
