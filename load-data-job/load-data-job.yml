@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: load-data
+spec:
+  template:
+    spec:
+      containers:
+        - name: dhinojosa
+          image: dhinojosa/load-data:latest
+          env:
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-environment
+                  key: REDIS_HOST
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-store
+                  key: redis-password
+      restartPolicy: Never
+  backoffLimit: 4
