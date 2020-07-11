@@ -1,0 +1,32 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: reuters-model-deployment
+spec:
+  replicas: 3
+  selector:
+        matchLabels:
+            app: reuters-model-server
+  template:
+    metadata:
+      labels:
+        app: reuters-model-server
+    spec:
+      containers:
+      - name: reuters-model-container
+        image: dhinojosa/reuters_model:latest 
+        ports:
+        - containerPort: 8500
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: reuters-model-service
+  name: reuters-model-service
+spec:
+  ports:
+  - port: 8500
+    targetPort: 8500
+  selector:
+    app: reuters-model-server

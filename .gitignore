@@ -2,3 +2,5 @@
 target
 *.iml
 **/*.swp
+**/*.ipynb_checkpoints
+notebook/reuters_model
