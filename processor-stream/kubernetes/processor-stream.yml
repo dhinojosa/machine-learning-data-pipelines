@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: "processor-stream"
+    labels:
+        app: "processor-stream"
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: "processor-stream"
+    template:
+        metadata:
+            labels:
+                app: "processor-stream"
+        spec:
+            containers:
+                -   name: "processor-stream"
+                    image: "dhinojosa/processor-stream"
+                    imagePullPolicy: Always
+                    env:
+                        -   name: JAVA_TOOL_OPTIONS
+                            value: -DLOGLEVEL=DEBUG
+                        -   name: KAFKA_SERVICE
+                            value: confluent-oss-cp-kafka
+                        -   name: TENSOR_FLOW_SERVICE
+                            value: reuters-model-service
+                        -   name: TENSOR_FLOW_SERVING_PORT
+                            value: "8501"
+                        -   name: TENSOR_FLOW_MODEL_VERSION
+                            value: "1594670045"
+                        -   name: REDIS_HOST
+                            valueFrom:
+                                configMapKeyRef:
+                                    name: redis-environment
+                                    key: REDIS_HOST
+                        -   name: REDIS_PASSWORD
+                            valueFrom:
+                                secretKeyRef:
+                                    name: redis-store
+                                    key: redis-password
+
