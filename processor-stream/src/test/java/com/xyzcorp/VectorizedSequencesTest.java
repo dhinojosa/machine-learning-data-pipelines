@@ -29,7 +29,7 @@ public class VectorizedSequencesTest {
         VectorizedSequences vectorizedSequences =
             new VectorizedSequences(getValueOption, map.size());
         List<Double> result = vectorizedSequences.vectorize("clown");
-        assertThat(result).isEqualTo(List.of(1));
+        assertThat(result).isEqualTo(List.of(1.0));
     }
 
     @Test
@@ -40,7 +40,7 @@ public class VectorizedSequencesTest {
         VectorizedSequences vectorizedSequences =
             new VectorizedSequences(getValueOption, map.size());
         List<Double> result = vectorizedSequences.vectorize("clown butter");
-        assertThat(result).isEqualTo(List.of(1, 1));
+        assertThat(result).isEqualTo(List.of(1.0, 1.0));
     }
 
     @Test
@@ -51,7 +51,7 @@ public class VectorizedSequencesTest {
         VectorizedSequences vectorizedSequences =
             new VectorizedSequences(getValueOption, map.size());
         List<Double> result = vectorizedSequences.vectorize("clown butter");
-        assertThat(result).isEqualTo(List.of(1, 1, 0));
+        assertThat(result).isEqualTo(List.of(1.0, 1.0, 0.0));
     }
 
     @Test
@@ -63,7 +63,7 @@ public class VectorizedSequencesTest {
         VectorizedSequences vectorizedSequences =
             new VectorizedSequences(getValueOption, map.size());
         List<Double> result = vectorizedSequences.vectorize("clown butter");
-        assertThat(result).isEqualTo(List.of(1, 1, 0, 0));
+        assertThat(result).isEqualTo(List.of(1.0, 1.0, 0.0, 0.0));
     }
 
     @Test
@@ -75,7 +75,7 @@ public class VectorizedSequencesTest {
         VectorizedSequences vectorizedSequences =
             new VectorizedSequences(getValueOption, map.size());
         List<Double> result = vectorizedSequences.vectorize("clown eclair");
-        assertThat(result).isEqualTo(List.of(1, 0, 0, 0));
+        assertThat(result).isEqualTo(List.of(1.0, 0.0, 0.0, 0.0));
     }
 
     @Test
@@ -87,6 +87,30 @@ public class VectorizedSequencesTest {
         VectorizedSequences vectorizedSequences =
             new VectorizedSequences(getValueOption, map.size());
         List<Double> result = vectorizedSequences.vectorize("the vector is vulgar");
-        assertThat(result).isEqualTo(List.of(0, 0, 0, 0));
+        assertThat(result).isEqualTo(List.of(0.0, 0.0, 0.0, 0.0));
+    }
+
+    @Test
+    public void testWhereTheDatabaseReturnsANumberGreaterThanSize() {
+        Map<String, Integer> map = Map.of("clown", 0, "butter", 1, "zoom", 2,
+            "bowler", 3);
+        Function<String, Optional<Integer>> getValueOption =
+            x -> Optional.ofNullable(map.get(x));
+        VectorizedSequences vectorizedSequences =
+            new VectorizedSequences(getValueOption, 2);
+        List<Double> result = vectorizedSequences.vectorize("the bowler is a clown");
+        assertThat(result).isEqualTo(List.of(1.0, 0.0));
+    }
+
+    @Test
+    public void testWhereTheDatabaseReturnsANumberSameAsSize() {
+        Map<String, Integer> map = Map.of("clown", 0, "butter", 1, "zoom", 2,
+            "bowler", 3);
+        Function<String, Optional<Integer>> getValueOption =
+            x -> Optional.ofNullable(map.get(x));
+        VectorizedSequences vectorizedSequences =
+            new VectorizedSequences(getValueOption, 4);
+        List<Double> result = vectorizedSequences.vectorize("the bowler is a clown");
+        assertThat(result).isEqualTo(List.of(1.0, 0.0, 0.0, 1.0));
     }
 }

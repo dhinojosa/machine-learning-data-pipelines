@@ -32,9 +32,9 @@ public class TensorFlowNegotiator {
     }
 
     public static TensorFlowNegotiator fromEnvVariables()  {
-        String url = System.getenv("TENSOR_FLOW_SERVING_SVC");
+        String url = System.getenv("TENSOR_FLOW_SERVICE");
         String port = System.getenv("TENSOR_FLOW_SERVING_PORT");
-        String version = System.getenv("MODEL_VERSION");
+        String version = System.getenv("TENSOR_FLOW_MODEL_VERSION");
         JSONConverter jsonConverter = JSONConverter.create();
         HttpClient httpClient = HttpClient.newBuilder().build();
         return new TensorFlowNegotiator(url, port, version,
@@ -54,13 +54,16 @@ public class TensorFlowNegotiator {
             .POST(HttpRequest.BodyPublishers.ofString(convertToJson.apply(data)))
             .build();
 
+        System.out.println("Sending content");
+
         try {
             HttpResponse<String> httpResponse = httpClient.send(request,
                 HttpResponse.BodyHandlers.ofString());
+            System.out.println("Received Body" + httpResponse);
             return convertResponseToCategory.apply(httpResponse.body());
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
-            return "Unknown";
+            return "Error";
         }
     }
 }

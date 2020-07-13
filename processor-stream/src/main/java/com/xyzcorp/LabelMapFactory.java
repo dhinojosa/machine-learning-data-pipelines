@@ -7,7 +7,7 @@ import java.util.stream.IntStream;
 
 public class LabelMapFactory {
 
-    private static List<String> listMap = List.of("cocoa", "grain", "veg-oil", "earn",
+    private static final List<String> listMap = List.of("cocoa", "grain", "veg-oil", "earn",
         "acq", "wheat", "copper", "housing", "money-supply",
         "coffee", "sugar", "trade", "reserves", "ship", "cotton",
         "carcass", "crude", "nat-gas",

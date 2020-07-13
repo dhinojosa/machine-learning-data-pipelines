@@ -3,34 +3,31 @@ package com.xyzcorp;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.kstream.ValueMapper;
-import redis.clients.jedis.Jedis;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.util.List;
-import java.util.Optional;
 import java.util.Properties;
-import java.util.function.Function;
 
 public class ProcessorStream {
     public static void main(String[] args) {
+        String kafkaService = System.getenv("KAFKA_SERVICE");
+        String kafkaPort = System.getenv("KAFKA_PORT");
+        System.out.println(kafkaService);
+        if (kafkaPort == null) kafkaPort = "9092";
+
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG,
             "my_streams_app");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG,
-            "localhost:9092");
+            kafkaService + ":" + kafkaPort);
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG,
             Serdes.String().getClass());
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG,
-            Serdes.Integer().getClass());
+            Serdes.String().getClass());
 
-        Jedis jedis = new Jedis(System.getenv("REDIS_HOST"));
+        System.out.println("Starting Stream");
 
         JedisOptionalDecorator jedisOptionalDecorator =
-            new JedisOptionalDecorator(jedis);
+            JedisOptionalDecorator.create();
 
         StreamsBuilder builder = new StreamsBuilder();
 
@@ -43,8 +40,10 @@ public class ProcessorStream {
         TensorFlowNegotiator tensorFlowNegotiator =
             TensorFlowNegotiator.fromEnvVariables();
 
-        stream.mapValues(vs::vectorize)
-              .map((k, v) -> new KeyValue<>(tensorFlowNegotiator.send(v), v))
+        stream.mapValues(v -> new KeyValue<String, List<Double>>(v, vs.vectorize(v)))
+              .peek((k,v) -> System.out.format("Pipe 1: (%s, %s)", k, v.toString()))
+              .map((k, v) -> new KeyValue<String, String>(tensorFlowNegotiator.send(v.value), v.key))
+              .peek((k,v) -> System.out.format("Pipe 2: (%s, %s)", k, v))
               .to("categoried-newsfeed");
 
         Topology topology = builder.build();

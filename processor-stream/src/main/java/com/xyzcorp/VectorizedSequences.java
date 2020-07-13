@@ -25,10 +25,11 @@ public class VectorizedSequences {
             Stream.generate(() -> 0.0)
                   .limit(size)
                   .collect(Collectors.toList());
-
         Arrays.stream(s.split(" "))
               .forEach(w ->
-                  function.apply(w).ifPresent(i -> result.set(i, 1.0)));
+                  function.apply(w).ifPresent(i -> {
+                      if (i < size) result.set(i, 1.0);
+                  }));
         return result;
     }
 }
