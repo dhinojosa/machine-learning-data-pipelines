@@ -1,0 +1,271 @@
+= Labs
+
+== Prerequisites
+
+* Helm
+* Kubernetes Instance
+* Anaconda Navigator
+* Docker
+* `kubectl`
+* Docker Hub Account
+
+== Clone Repository
+
+. Clone Repository: 
+
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ git clone https://github.com/dhinojosa/machine-learning-data-pipelines
+----
+
+== Open notebook
+
+. Run Anaconda
+. Create a _tensorflow_ environment
+. Install the following
+.. tensorflow
+.. keras
+.. numpy
+. Click _Home_ in Anaconda
+. *Launch* Jupyter Notebook
+. Once in Jupyter Notebooks
+
+== Setting up Redis
+
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ helm repo add bitnami https://charts.bitnami.com/bitnami
+$ helm repo update
+$ helm install redis-store bitnami/redis
+----
+
+== Run Job
+
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ kubectl apply -f load-data-job.yml
+----
+
+== Run Tensor Flow Serving Locally
+
+. Ensure you are still in the _notebook_ directory
+. Run the following command
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker run -t --rm --name reuters_serving -p 8501:8501 -v "$(pwd)/reuters_model:/models/reuters_model" -e MODEL_NAME=reuters_model tensorflow/serving
+----
++
+. Open another terminal shell
+. Find the process that is running your tensorflow serving
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker ps
+CONTAINER ID        IMAGE                 NAMES
+54f72518cb8e        tensorflow/serving    reuters_serving
+----
++
+. View _sample-data.json_ to see the content that we are going to send to our tensorflow model
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ cat sample-data.json
+----
++
+. Test the serving model, replacing `{version}` with the appropriate version number
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ curl -X POST http://localhost:8501/v1/models/reuters_model/versions/1594670045:predict -H "Accept: application/json" -H "Content-Type: application/json" --data-binary "@sample-data.json"
+----
++
+. Stop the process
+
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker stop reuters_serving
+----
+
+
+== Create Deployable Container of Your Model
+
+. Start off running your base
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker run -d --name serving_base tensorflow/serving
+----
++
+. Copy the model into the running container
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker cp reuters_model serving_base:/models/reuters_model
+----
++
+. Commit the `ENV` name of your model to the instance and save it under a new container name, in user `{user}` place the username of your container, as it appears as a repository 
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker commit --change "ENV MODEL_NAME reuters_model" serving_base {user}/reuters_model
+----
++
+. Kill and stop the base container
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker kill serving_base
+$ docker rm serving_base
+----
++
+. Ensure that you still have your new image ready to deploy
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker image ls
+----
+
+== Upload to DockerHub
+
+. Ensure that you are authenticated within docker so that you can upload, replacing `{user}` and `{email}` respectively
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker login --username={user} --email={email}
+WARNING: login credentials saved in /home/username/.docker/config.json
+Login Succeeded
+----
++
+. Push your image
+
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker push {user}/reuters_model
+----
+
+== Run Tensor Flow Serving in Kubernetes
+
+. Open _deploy_reuters_serving.yml_ in your favorite editor
+. In or around line 14, change `{user}` to the name of your Docker repository where your model is served, for example:
++
+[source, yaml, subs="attributes,quotes,verbatim"]
+----
+...
+    spec:
+      containers:
+      - name: reuters-model-container
+        image: dhinojosa/reuters-model:latest 
+        ports:
+        - containerPort: 8500
+...
+----
++
+. Run the yaml in your Kubernetes Cluster
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ kubectl apply -f deploy_reuters_serving.yml
+----
++
+. Query that the deployment was successful
+
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ kubectl get svc
+----
+
+== Run Kafka in Kubernetes
+
+. Ensure you have the latest version
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$  helm version
+version.BuildInfo{Version:"v3.1.2", GitCommit:"d878d4d45863e42fd5cff6743294a11d28a9abce", GitTreeState:"clean", GoVersion:"go1.13.8"}
+----
++
+. Add the Confluent Repo to Helm
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ helm repo add confluentinc https://confluentinc.github.io/cp-helm-charts/
+$ helm repo update
+----
++
+. Add the Confluent OSS Stack
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ helm install confluent-oss --set cp-zookeeper.servers=2,cp-kafka.brokers=2,cp-control-center.enabled=false,cp-schema-registry.enabled=false,cp-kafka-rest.enabled=false,cp-kafka-connect.enabled=false confluentinc/cp-helm-charts 
+----
++
+. Run the test pod to ensure installation success
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ helm test confluent-oss
+----
++
+. View the pods to also ensure they are running
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ kubectl get pods
+----
++
+. Deploy a kafka-client
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ kubectl apply -f kafka-client.yml
+----
++
+. Open the client and create a `newsfeed` topic with `3` partitions and replication factor of `3`
+
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ kubectl exec -it kafka-client -- /bin/bash
+# kafka-topics --zookeeper confluent-oss-cp-zookeeper-headless:2181 --topic newsfeed --create --partitions 3 --replication-factor 2 --if-not-exists
+# kafka-topics --zookeeper confluent-oss-cp-zookeeper-headless:2181 --topic categoried-newsfeed --create --partitions 3 --replication-factor 2 --if-not-exists
+# exit
+----
+
+== Run Kafka Streams Application in Kubernetes
+
+. In your terminal go to the _processor_stream_ directory
+. Review the code
+. Run `mvn compile mvn compile jib:build` (This will update the container to your docker hub)
+. Use `kubectl apply` to apply the _kubernetes/processor-stream.yml_
+
+== Run Producer to send information to `newsfeed` topic
+
+. Login into the kafka-client pod
+. Run `kafka-console-producer` to send data
+. Find some article online and post some of the article with a key, for example.
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ kubectl exec -it kafka-client -- /bin/bash
+$ kafka-console-producer \
+  --broker-list confluent-oss-cp-kafka:9092 \
+  --topic newsfeed \
+  --property "parse.key=true" \
+  --property "key.separator=:"
+> coinworld:The Battle of Britain took place over southern England etc.
+----
++
+. Run a consumer
+
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ kafka-console-consumer  --bootstrap-server confluent-oss-cp-kafka:9092 --topic categoried-newsfeed \
+    --property print.key=true \
+    --property key.separator=,
+----
+
+
+== Run KSQL to see Results
+
+. This is purely if there is time. If not don't worry about it.
+. Given what you know about Docker and Kubernetes, there is an image https://hub.docker.com/r/confluentinc/cp-ksql-cli
+. Use this image to connect to the ksql server, and analyze the data with categories
