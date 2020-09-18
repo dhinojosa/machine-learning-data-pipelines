@@ -35,7 +35,7 @@ public class JSONConverter {
     public String convertResponseToCategory(String response) {
         TypeReference<Map<String, List<List<Double>>>> typeReference =
             new TypeReference<>() {};
-        Map<String, List<List<Double>>> map = null;
+        Map<String, List<List<Double>>> map;
 
         try {
             map = objectMapper.readValue(response, typeReference);
