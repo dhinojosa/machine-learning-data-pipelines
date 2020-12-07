@@ -725,7 +725,7 @@ Login Succeeded</code></pre>
       - name: reuters-model-container
         image: dhinojosa/reuters-model:latest
         ports:
-        - containerPort: 8500
+        - containerPort: 8501
 ...</code></pre>
 </div>
 </div>
@@ -842,6 +842,11 @@ $ helm repo update</code></pre>
 </li>
 <li>
 <p>Update your <em>pom.xml</em> and look for the <strong>jib-maven-plugin</strong>, and change <code>&lt;image&gt;</code> to your docker-hub account</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">$ mvn package jib:build</code></pre>
+</div>
+</div>
 </li>
 <li>
 <p>Review <em>kubernetes/processor-stream.yml</em> and change the model number to your tensor-flow model version, and image</p>
@@ -919,7 +924,7 @@ $ kafka-console-producer \
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-09-18 06:04:29 -0600
+Last updated 2020-12-06 22:25:51 -0700
 </div>
 </div>
 </body>

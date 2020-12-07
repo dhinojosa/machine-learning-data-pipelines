@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
       - name: reuters-model-container
-        image: dhinojosa/reuters_model:latest 
+        image: dhinojosa/reuters_model:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8501
 ---
