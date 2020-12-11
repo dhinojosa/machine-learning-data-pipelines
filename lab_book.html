@@ -683,17 +683,17 @@ $ docker rm serving_base</code></pre>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Ensure that you are authenticated within docker so that you can upload, replacing <code>{user}</code> and <code>{email}</code> respectively</p>
+<p>Ensure that you are authenticated within docker so that you can upload by logging in.</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">$ docker login --username={user} --email={email}
+<pre class="highlight"><code class="language-sh" data-lang="sh">$ docker login
 WARNING: login credentials saved in /home/username/.docker/config.json
 Login Succeeded</code></pre>
 </div>
 </div>
 </li>
 <li>
-<p>Push your image</p>
+<p>Push your image where you replace <code>{user}</code> with your username</p>
 </li>
 </ol>
 </div>
@@ -723,7 +723,7 @@ Login Succeeded</code></pre>
     spec:
       containers:
       - name: reuters-model-container
-        image: dhinojosa/reuters-model:latest
+        image: {user}/reuters-model:latest
         ports:
         - containerPort: 8501
 ...</code></pre>
@@ -844,7 +844,7 @@ $ helm repo update</code></pre>
 <p>Update your <em>pom.xml</em> and look for the <strong>jib-maven-plugin</strong>, and change <code>&lt;image&gt;</code> to your docker-hub account</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">$ mvn package jib:build</code></pre>
+<pre class="highlight"><code class="language-sh" data-lang="sh">$ mvn compile jib:build</code></pre>
 </div>
 </div>
 </li>
@@ -924,7 +924,7 @@ $ kafka-console-producer \
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-12-06 22:25:51 -0700
+Last updated 2020-12-10 20:44:36 -0700
 </div>
 </div>
 </body>
