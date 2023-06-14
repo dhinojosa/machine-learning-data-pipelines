@@ -227,3 +227,11 @@ services:
             CHOWN_HOME_OPTS: "-R"
         volumes:
             - ${PWD}/notebook:/home/jovyan/work
+    
+    load-redis-data:
+        image: dhinojosa/load-data:latest
+        depends_on:
+            - redis
+        environment:
+            REDIS_HOST: "redis"
+            REDIS_PASSWORD: "inner-redis"
