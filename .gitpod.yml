@@ -1,0 +1,5 @@
+vscode:
+    extensions:
+        - "vscjava.vscode-java-pack"
+        - "redhat.fabric8-analytics"
+        - ms-azuretools.vscode-docker
