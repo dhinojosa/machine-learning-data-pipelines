@@ -28,7 +28,7 @@ spec:
                         -   name: TENSOR_FLOW_SERVING_PORT
                             value: "8501"
                         -   name: TENSOR_FLOW_MODEL_VERSION
-                            value: "1600455255"
+                            value: "1671120594"
                         -   name: REDIS_HOST
                             valueFrom:
                                 configMapKeyRef:
