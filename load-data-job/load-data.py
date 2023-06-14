@@ -26,4 +26,5 @@ labels = ['cocoa','grain','veg-oil','earn','acq','wheat','copper','housing','mon
         'lei','bop','zinc','orange','pet-chem','dlr','gas','silver','wpi','hog','lead']
 
 for (key, value) in enumerate(labels):
+    print("Adding key: {}, value: {} to labels_db".format(key, value))
     labels_db.set(key, value)
