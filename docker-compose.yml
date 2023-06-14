@@ -200,7 +200,7 @@ services:
         command: redis-server --save 20 1 --loglevel warning --requirepass inner-redis
 
     reuters-model:
-        image: dhinojosa/reuters-model:latest
+        image: dhinojosa/reuters_model:latest
         restart: always
         ports:
             - '8501:8501'
@@ -208,12 +208,17 @@ services:
     processor-stream:
         image: dhinojosa/processor-stream:latest
         restart: always
+        depends_on:
+            - broker
+            - reuters-model
+            - redis
         environment:
             JAVA_TOOL_OPTIONS: "-DLOGLEVEL=DEBUG"
-            KAFKA_SERVICE: confluent-oss-cp-kafka
-            TENSOR_FLOW_SERVICE: reuters-model-service
+            KAFKA_SERVICE: broker
+            KAFKA_PORT: 29092
+            TENSOR_FLOW_SERVICE: reuters-model
             TENSOR_FLOW_SERVING_PORT: "8501"
-            TENSOR_FLOW_MODEL_VERSION: "1600455255"
+            TENSOR_FLOW_MODEL_VERSION: "1677529054"
             REDIS_HOST: "redis"
             REDIS_PASSWORD: "inner-redis"
 
