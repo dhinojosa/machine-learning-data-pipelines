@@ -198,8 +198,6 @@ services:
         ports:
             - '6379:6379'
         command: redis-server --save 20 1 --loglevel warning --requirepass inner-redis
-        volumes:
-            - cache:/data
 
     reuters-model:
         image: dhinojosa/reuters-model:latest
@@ -222,5 +220,10 @@ services:
     tensorflow-notebook:
         image: jupyter/tensorflow-notebook
         restart: always
+        ports:
+            - 8888:8888
+        environment:
+            CHOWN_HOME: "yes"
+            CHOWN_HOME_OPTS: "-R"
         volumes:
             - ${PWD}/notebook:/home/jovyan/work
