@@ -1,5 +1,6 @@
-#
-Machine Learning Data Pipelines
+# Machine Learning Data Pipelines
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/dhinojosa/machine-learning-data-pipelines)
 
 ## What is it?
 
@@ -13,12 +14,3 @@ Slides are included in this repository
 
 The presentation is MIT licensed, taking this presentation and using it for your
 own presentation is encouraged.
-
-Run the following to install tensorflow:
-
-1. conda create --name tensorflow
-2. conda activate tensorflow
-3. conda install tensorflow
-4. conda install keras
-5. conda install matplotlib
-6. conda install -c condo-forge notebook
