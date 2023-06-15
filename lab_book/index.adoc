@@ -1,0 +1,273 @@
+= Machine Learning Data Pipelines Labs
+Daniel Hinojosa
+:navigation:
+:split:
+:source-highlighter: pygments
+:pygments-style: friendly
+:icons: font
+:imagesdir: ./images
+:latest_kubernetes: 1.25
+:star: *
+:starline: *_
+:starstar: **
+:underscore: _
+:toc: left
+:experimental:
+
+== Open Gitpod
+
+. Visit the https://github.com/dhinojosa/machine-learning-data-pipelines[github repository, window=_blank] for this class
+. Go to the _Readme_ of the repository and click on the "Open in Gitpod" icon
+. You can also go direct to the repository https://gitpod.io/github.com/dhinojosa/machine-learning-data-pipelines[here, window=_blank]
+. Sign in your preferred credential: Github, Gitlab, or Bitbucket
+. You will be prompted with what kind of editor and hardware would you like. Keep the editor as "VS Code - Browser"
++
+image::NewWorkspace.png[]
++
+. Click _Continue_
+. Wait for all the plugins to initialize
+. When asked if you want to use VSCode Remote, dismiss the box, we want to stay on the website.
+
+== Open up the Tensorflow Notebook
+
+. Right click on _docker-compose.yaml_, and select "Compose Up - Select Services"
++
+image::SelectServices.png[]
++
+. In the drop-down select "tensorflow-notebook"
++
+image::TensorFlowNotebook.png[]
++
+. Click btn:[OK]
+. Click the Docker icon on the Left hand bar
+. In the docker menu, under _containers_, right-click on the the _jupyter/tensforflow_notebook_ and select _View logs_. This will open the logs of the container
+. In the docker menu, under _containers_, right-click on the the _jupyter/tensforflow_notebook_ and select _Open in Browser_. The will open your notebook in a browser window
+. Go to the logs on terminals and copy the token from the logs
++
+image::JupyterLogs.png[]
++
+. Go the browser window that has your Jupyter page and plugin your token in the field _Password or token:_
+. You should have a notebook application ready to run
++
+image::JupyterLab.png[]
+
+image::stop.png[width=10%, height=10%, align=center]
+
+== Setting up Redis
+
+. Right click on _docker-compose.yml_ and again, select "Compose Up - Select Services"
+. Unselect all, and then select "redis"
+. Click btn:[OK]
+
+
+== Loading the data
+
+. Right click on _docker-compose.yml_ and again, select "Compose Up - Select Services"
+. Unselect all, and then select "load-redis-data"
+. Click btn:[OK]
+
+== Ensuring that the data is loaded
+
+. Go to Docker Menu, In _Containers_, right click on redis and select "Attach Shell"
+. In the shell, login into redis
++
+[source]
+----
+# redis-cli -a inner-redis
+----
++
+. Select the zeroth database and get all the keys
++
+[source,shell]
+----
+> Select 0
+> Keys *
+----
++
+. Select the first database and get all the keys
++
+[source,shell]
+----
+> Select 1
+> Keys *
+----
+
+image::stop.png[width=10%, height=10%, align=center]
+
+== Run TensorFlow Serving Locally
+
+. Ensure you are still in the _notebook_ directory
+. Run the following command
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker run -t --rm --name reuters_serving -p 8501:8501 -v "$(pwd)/reuters_model:/models/reuters_model" -e MODEL_NAME=reuters_model tensorflow/serving
+----
++
+. Open another terminal shell
+. Find the process that is running your tensorflow serving
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker ps
+CONTAINER ID        IMAGE                 NAMES
+54f72518cb8e        tensorflow/serving    reuters_serving
+----
++
+. View _sample-data.json_ to see the content that we are going to send to our tensorflow model
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ cat sample-data.json
+----
++
+. Test the serving model, replacing `{version}` with the appropriate version number
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ curl -X POST http://localhost:8501/v1/models/reuters_model/versions/1594670045:predict -H "Accept: application/json" -H "Content-Type: application/json" --data-binary "@sample-data.json"
+----
++
+. Stop the process
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker stop reuters_serving
+----
+
+== Create Deployable Container of Your Model
+
+. Start off running your base
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker run -d --name serving_base tensorflow/serving
+----
++
+. Copy the model into the running container
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker cp reuters_model serving_base:/models/reuters_model
+----
++
+. Commit the `ENV` name of your model to the instance and save it under a new container name, in user `{user}` place the username of your container, as it appears as a repository
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker commit --change "ENV MODEL_NAME reuters_model" serving_base {user}/reuters_model
+----
++
+. Kill and stop the base container
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker kill serving_base
+$ docker rm serving_base
+----
++
+. Ensure that you still have your new image ready to deploy
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker image ls
+----
+
+== Upload to DockerHub
+
+. Ensure that you are authenticated within docker so that you can upload by logging in.
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker login
+WARNING: login credentials saved in /home/username/.docker/config.json
+Login Succeeded
+----
++
+. Push your image where you replace `{user}` with your username
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ docker push {user}/reuters_model
+----
+
+image::stop.png[width=10%, height=10%, align=center]
+
+== Run TensorFlow Serving
+
+. Open the _docker-compose.yml_, locate `reuters-model` and change the image to your image if you would like
+. Right-click on _docker_compose.yml_ and right click. Select "Compose Up - Select Services" choose "reuters-model"
+. Go to the docker menu and view the logs of `reuters-model`
+. Note the version, we will use it later.
+
+image::stop.png[width=10%, height=10%, align=center]
+
+== Run Kafka
+
+. Right-click on _docker_compose.yml_ and right click. Select "Compose Up - Select Services" choose "control-center" and btn:[Ok]
++
+image::ControlCenter.png[]
++
+. After all is running, open the control-center container on the web-browser
++
+image::OpenControlCenter.png[]
++
+. Open the _Topics_ menu on the left hand side, and click btn:[+ Add Topic]
++
+image::Topics.png[]
++
+. Create a new topic _newsfeed_ with 3 partitions
++
+image::Newsfeed.png[]
++
+. Create another new topic _categoried-newsfeed_, also with 3 partitions
++
+image::Categoried-newsfeed.png[]
+
+image::stop.png[width=10%, height=10%, align=center]
+
+== Run Kafka Streams Application
+
+. Go to the _processor_stream_ directorym and look around the source code. Particularly the _src/main/java_ directory. Particularly the _ProcessorStream.java_ file
+. Open _docker-compose.yml_ and review how it is setup and the environment varaibles it is dependent on.
+. Right-click on _docker_compose.yml_ and right click. Select "Compose Up - Select Services" choose "processor-stream"
+. View the logs of the processor-stream container and ensure that nothing looks out of place
+
+image::stop.png[width=10%, height=10%, align=center]
+
+== Run Producer to send information to `newsfeed` topic
+
+. Go to the docker menu, and locate the cp-server container which also goes by the name of broker and "Attach Shell"
++
+image::AttachShell.png[]
++
+. Run `kafka-console-producer` to send data
+. Find some article online and post some of the article with a key, for example.
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ kafka-console-producer \
+  --broker-list localhost:9092 \
+  --topic newsfeed \
+  --property "parse.key=true" \
+  --property "key.separator=:"
+> coinworld:The Battle of Britain took place over southern England, etc.
+----
+
+== Run Consumer to receive information from `categoried-newsfeed` topic
+
+. Attach another shell of the same container, and run the consumer
++
+image::AttachShell.png[]
++
+[source, sh, subs="attributes,quotes,verbatim"]
+----
+$ kafka-console-consumer  --bootstrap-server localhost:9092 --topic categoried-newsfeed \
+    --property print.key=true \
+    --property key.separator=: \
+    --from-beginning
+----
++
+. Ensure that the data is categorized from the tensorflow application
+
+image::stop.png[width=10%, height=10%, align=center]
