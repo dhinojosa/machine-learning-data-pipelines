@@ -40,8 +40,8 @@ image::TensorFlowNotebook.png[]
 +
 . Click btn:[OK]
 . Click the Docker icon on the Left hand bar
-. In the docker menu, under _containers_, right-click on the the _jupyter/tensforflow_notebook_ and select _View logs_. This will open the logs of the container
-. In the docker menu, under _containers_, right-click on the the _jupyter/tensforflow_notebook_ and select _Open in Browser_. The will open your notebook in a browser window
+. In the docker menu, under _containers_, right-click on the the _jupyter/tensorflow_notebook_ and select _View logs_. This will open the logs of the container
+. In the docker menu, under _containers_, right-click on the the _jupyter/tensorflow_notebook_ and select _Open in Browser_. The will open your notebook in a browser window
 . Go to the logs on terminals and copy the token from the logs
 +
 image::JupyterLogs.png[]
@@ -135,7 +135,7 @@ $ curl -X POST http://localhost:8501/v1/models/reuters_model/versions/1594670045
 $ docker stop reuters_serving
 ----
 
-== Create Deployable Container of Your Model
+== Create Deployable Image of Your Model
 
 . Start off running your base
 +
