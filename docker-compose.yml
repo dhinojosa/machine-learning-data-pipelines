@@ -227,6 +227,7 @@ services:
         restart: always
         ports:
             - 8888:8888
+        user: root
         environment:
             CHOWN_HOME: "yes"
             CHOWN_HOME_OPTS: "-R"
